@@ -2095,7 +2095,7 @@ a {
     overflow: hidden;
 
     /* Replace with your WordPress image URL */
-    background-image: url('../images/cta-park.jpg');
+    background-image: url('cta-park.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
