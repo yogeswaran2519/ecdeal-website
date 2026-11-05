@@ -315,3 +315,85 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 })();
+
+
+
+
+
+
+(function () {
+  var root = document.querySelector(".pl");
+  if (!root) return;
+
+  var DATA = [
+    { v: "3 BHK", sqft: 2280, cr: 5.25 },
+    { v: "3 BHK", sqft: 3050, cr: 7.01 },
+    { v: "3 BHK", sqft: 3201, cr: 7.36 },
+    { v: "4 BHK", sqft: 3577, cr: 8.23 },
+    { v: "4 BHK", sqft: 3713, cr: 8.53 }
+  ];
+
+  var list = root.querySelector("[data-list]");
+  var tagEl = root.querySelector("[data-tag]");
+  var priceEl = root.querySelector("[data-price]");
+  var sizeEl = root.querySelector("[data-size]");
+  var psfEl = root.querySelector("[data-psf]");
+  var plateEl = root.querySelector("[data-plate]");
+
+  var fmt = function (n) { return n.toLocaleString("en-IN"); };
+  var maxSq = Math.max.apply(null, DATA.map(function (d) { return d.sqft; }));
+  var raf;
+  var shown = 0;
+
+  function show(d) {
+    tagEl.textContent = d.v;
+    sizeEl.textContent = fmt(d.sqft) + " sq.ft";
+    psfEl.textContent = "About ₹" + fmt(Math.round(d.cr * 1e7 / d.sqft / 10) * 10) + " per sq.ft";
+    plateEl.style.width = (d.sqft / maxSq * 100) + "%";
+
+    var from = shown;
+    var start = performance.now();
+    cancelAnimationFrame(raf);
+
+    function step(now) {
+      var k = Math.min(1, (now - start) / 400);
+      var val = from + (d.cr - from) * (1 - Math.pow(1 - k, 3));
+      priceEl.innerHTML = "₹" + val.toFixed(2) + "<small>Cr</small>";
+      if (k < 1) {
+        raf = requestAnimationFrame(step);
+      } else {
+        shown = d.cr;
+      }
+    }
+    raf = requestAnimationFrame(step);
+  }
+
+  var html = "";
+  var last = "";
+  DATA.forEach(function (d, i) {
+    if (d.v !== last) {
+      html += '<h2 class="pl-group">' + d.v + "</h2>";
+      last = d.v;
+    }
+    html +=
+      '<button class="pl-row" type="button" aria-pressed="false" data-i="' + i + '">' +
+      '<span class="pl-row-size">' + fmt(d.sqft) + "<small>sq.ft</small></span>" +
+      '<span class="pl-row-price">₹' + d.cr.toFixed(2) + " Cr</span>" +
+      "</button>";
+  });
+  list.innerHTML = html;
+
+  function pick(i) {
+    list.querySelectorAll(".pl-row").forEach(function (r) {
+      r.setAttribute("aria-pressed", String(r.getAttribute("data-i") === String(i)));
+    });
+    show(DATA[i]);
+  }
+
+  list.addEventListener("click", function (e) {
+    var r = e.target.closest(".pl-row");
+    if (r) pick(Number(r.getAttribute("data-i")));
+  });
+
+  pick(0);
+})();
